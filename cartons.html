@@ -1,0 +1,481 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cartons de Quina (6 per fulla)</title>
+    <style>
+    :root {
+      --bg: #f5f7fa;
+      --card: #ffffff;
+      --border: #d9e4ec;
+      --text: #1f2a36;
+      --muted: #5a6c7a;
+      --accent: #ff6e00;
+      --cyan: #52c6e2;
+      --shadow: 0 6px 18px rgba(31, 42, 54, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 16px;
+      background: var(--bg);
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      color: var(--text);
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    label { font-weight: 600; }
+    input[type="number"] {
+      width: 90px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    button {
+      padding: 10px 14px;
+      border: none;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #0b1222;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: transform 0.08s ease, box-shadow 0.12s ease;
+    }
+    button:active { transform: translateY(1px); }
+    #back-home {
+      width: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+    }
+    #back-home svg {
+      width: 18px;
+      height: 18px;
+      fill: #0b1222;
+    }
+
+    #blocs {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .fulla {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: repeat(2, auto);
+      grid-template-rows: repeat(3, auto);
+      gap: 22px;
+      align-content: flex-start;
+      justify-content: center;
+      width: fit-content;
+      margin: 0 auto;
+      min-height: 190mm;
+    }
+
+    /* *** cada bloc de 6 és una pàgina en mode impressió/PDF */
+    .pdf-page {
+      page-break-after: always;
+      break-after: page;
+    }
+
+    .cartro {
+      border: 2px solid #b8c6d3;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+    }
+    .taula {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      grid-template-rows: repeat(3, auto);
+      width: 300px;
+      height: 140px;
+    }
+    .cella {
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .cella.empty-no-icon {
+      background: #e8eef5;
+    }
+    .cella img {
+      width: 18px;
+      height: 18px;
+      opacity: 0.6;
+    }
+
+    /* *** Estils especials només mentre exportem el PDF */
+    .pdf-export #blocs {
+      gap: 0;
+    }
+
+    .pdf-export .fulla {
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      padding: 8mm;
+      border: none;
+      box-shadow: none;
+      box-sizing: border-box;
+      align-content: flex-start;
+      min-height: 190mm;
+    }
+
+    .pdf-export .cartro {
+      width: 100%;
+      box-shadow: none;
+    }
+
+    .pdf-export .taula {
+      width: 100%;
+      height: 190px; /* puja-ho si vols cartrons encara més grans */
+    }
+
+    .pdf-export .cella {
+      font-size: 20px;
+      padding: 2mm;
+    }
+
+    @media print {
+      body { background: #fff; padding: 0; }
+      header { display: none; }
+      button { display: none; }
+      #blocs { gap: 0; }
+      .fulla {
+        border: none;
+        box-shadow: none;
+        margin: 0;
+        padding: 8mm;
+        width: 100%;
+        max-width: 100%;
+        min-height: 190mm;
+        align-content: flex-start;
+      }
+      .cartro { box-shadow: none; }
+      @page { size: A4 landscape; margin: 10mm; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <button id="back-home" type="button" aria-label="Torna a la principal">
+      <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+        <path d="M12 3.172 4.586 10.586a1 1 0 0 0 .707 1.707H7v6.5a.5.5 0 0 0 .5.5H11v-4.5a1 1 0 0 1 1-1h1.5a1 1 0 0 1 1 1V19h3.5a.5.5 0 0 0 .5-.5V12.293h1.707a1 1 0 0 0 .707-1.707L12 3.172Z"/>
+      </svg>
+    </button>
+    <label for="num-blocs">Nombre de blocs (fulles):</label>
+    <input type="number" id="num-blocs" min="1" value="1">
+    <button id="genera">Genera cartrons</button>
+    <button id="download-pdf" type="button">Descarrega PDF</button>
+    <label style="display:flex;align-items:center;gap:8px;font-weight:600;">
+      <input type="checkbox" id="show-icons" checked>
+      Mostrar imatge als buits
+    </label>
+  </header>
+
+  <div id="blocs"></div>
+
+  <script src="libs/html2pdf.bundle.min.js"></script>
+  <script src="libs/html2canvas.min.js"></script>
+  <script src="libs/jspdf.umd.min.js"></script>
+  <script>
+    const colRanges = [
+      [1, 9], [10, 19], [20, 29], [30, 39], [40, 49],
+      [50, 59], [60, 69], [70, 79], [80, 90],
+    ];
+    const colTotals = [9,10,10,10,10,10,10,10,11];
+
+    // Elements UI principals
+    const btn = document.getElementById('genera');
+    const input = document.getElementById('num-blocs');
+    const container = document.getElementById('blocs');
+    const backBtn = document.getElementById('back-home');
+    const showIcons = document.getElementById('show-icons');
+    const pdfBtn = document.getElementById('download-pdf');
+
+    let blocsCount = 1;
+
+    // Generar els blocs segons el valor introduït
+    btn.addEventListener('click', () => {
+      const n = Math.max(1, parseInt(input.value, 10) || 1);
+      blocsCount = n;
+      renderBlocs(n);
+    });
+
+    // Retorn a la portada
+    backBtn.addEventListener('click', () => {
+      window.location.href = 'index.html';
+    });
+
+    // Generar i descarregar el PDF pàgina a pàgina
+    pdfBtn.addEventListener('click', async () => {
+      if (!container.children.length) return;
+      document.body.classList.add('pdf-export');
+      try {
+        await generatePdfFromPages();
+      } catch (err) {
+        console.error('PDF error', err);
+      } finally {
+        document.body.classList.remove('pdf-export');
+      }
+    });
+    // Re-render al canviar si es mostren icones o buits
+    showIcons.addEventListener('change', () => {
+      renderBlocs(blocsCount);
+    });
+
+    renderBlocs(1);
+
+    // Construeix tants blocs de 6 cartrons com es demana, evitant duplicats
+    function renderBlocs(count) {
+      blocsCount = count;
+      container.innerHTML = '';
+      const cardFingerprints = new Set();
+      for (let i = 0; i < count; i++) {
+        const bloc = generaBloc(cardFingerprints);
+        container.appendChild(bloc);
+      }
+    }
+
+    // Genera un bloc de 6 cartrons garantint que no es repeteixin amb anteriors
+    function generaBloc(existingFingerprints) {
+      let lastFulla = null;
+      let lastFingerprints = [];
+
+      // *** provem diverses vegades per evitar duplicats entre blocs
+      for (let attempt = 0; attempt < 30; attempt++) {
+        const fulla = document.createElement('div');
+        fulla.className = 'fulla pdf-page';  // *** cada bloc Ç¸s una pÇÿgina al PDF
+
+        const counts = distribucioCounts();
+        const colPools = colRanges.map(([min, max]) => shuffle(range(min, max)));
+        const blocFingerprints = [];
+        let hasDuplicate = false;
+
+        for (let t = 0; t < 6; t++) {
+          const layout = assignaFilas(counts[t]);
+          const grid = Array.from({ length: 3 }, () => Array(9).fill(null));
+
+          for (let c = 0; c < 9; c++) {
+            const numCount = counts[t][c];
+            const rows = layout[c].slice().sort((a, b) => a - b);
+            const nums = [];
+            for (let k = 0; k < numCount; k++) {
+              nums.push(colPools[c].shift());
+            }
+            nums.sort((a, b) => a - b);
+            rows.forEach((r, idx) => {
+              grid[r][c] = nums[idx];
+            });
+          }
+
+          const fp = fingerprintGrid(grid);
+          if (existingFingerprints.has(fp) || blocFingerprints.includes(fp)) {
+            hasDuplicate = true;
+            break;
+          }
+
+          blocFingerprints.push(fp);
+          fulla.appendChild(renderCartro(grid));
+        }
+
+        if (!hasDuplicate) {
+          blocFingerprints.forEach(fp => existingFingerprints.add(fp));
+          return fulla;
+        }
+
+        lastFulla = fulla;
+        lastFingerprints = blocFingerprints;
+      }
+
+      // fallback si no hem pogut esquivar duplicats
+      lastFingerprints.forEach(fp => existingFingerprints.add(fp));
+      return lastFulla;
+    }
+
+    // Empremta del cartró per detectar duplicats
+    function fingerprintGrid(grid) {
+      return grid
+        .map(row => row.map(v => (v === null ? 0 : v)).join(','))
+        .join(';');
+    }
+
+    // Captura cada pàgina i la munta en un PDF A4 horitzontal
+    async function generatePdfFromPages() {
+      const html2canvasFn = window.html2canvas;
+      const jsPDFLib = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+      if (!html2canvasFn || !jsPDFLib) {
+        throw new Error('Falta html2canvas o jsPDF');
+      }
+      const pages = Array.from(container.querySelectorAll('.pdf-page'));
+      if (!pages.length) return;
+
+      const pdf = new jsPDFLib({ unit: 'mm', format: 'a4', orientation: 'landscape' });
+
+      for (let i = 0; i < pages.length; i++) {
+        if (i > 0) await new Promise(res => setTimeout(res, 0)); // cedir control en lots grans
+        const canvas = await html2canvasFn(pages[i], {
+          scale: 1.4,
+          useCORS: true,
+          letterRendering: true,
+          logging: false,
+          backgroundColor: '#fff',
+        });
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        const pdfW = pdf.internal.pageSize.getWidth();
+        const pdfH = pdf.internal.pageSize.getHeight();
+        if (i > 0) pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
+      }
+
+      pdf.save('cartons-quina.pdf');
+    }
+
+    function renderCartro(grid) {
+      const cartro = document.createElement('div');
+      cartro.className = 'cartro';
+      const taula = document.createElement('div');
+      taula.className = 'taula';
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 9; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'cella';
+          const val = grid[r][c];
+          if (val === null) {
+            if (showIcons.checked) {
+              const img = document.createElement('img');
+              img.src = './img/icon.png';
+              img.alt = 'buit';
+              cell.appendChild(img);
+            } else {
+              cell.classList.add('empty-no-icon');
+            }
+          } else {
+            cell.textContent = val;
+          }
+          taula.appendChild(cell);
+        }
+      }
+      cartro.appendChild(taula);
+      return cartro;
+    }
+
+    function distribucioCounts() {
+      const tickets = 6;
+      const counts = Array.from({ length: tickets }, () => Array(9).fill(1));
+      const remTicket = Array(tickets).fill(6); // 15 - 9
+      const remCol = colTotals.map(t => t - tickets); // subtract baseline 1 per ticket
+
+      let remaining = remTicket.reduce((a, b) => a + b, 0);
+      while (remaining > 0) {
+        let progress = false;
+        for (let c = 0; c < 9; c++) {
+          while (remCol[c] > 0) {
+            const elig = [];
+            for (let t = 0; t < tickets; t++) {
+              if (remTicket[t] > 0 && counts[t][c] < 3) elig.push(t);
+            }
+            if (!elig.length) break;
+            const pick = elig[Math.floor(Math.random() * elig.length)];
+            counts[pick][c] += 1;
+            remTicket[pick] -= 1;
+            remCol[c] -= 1;
+            remaining -= 1;
+            progress = true;
+          }
+        }
+        if (!progress) break; // safety
+      }
+      return counts;
+    }
+
+    function assignaFilas(colCounts) {
+      // retorna array de 9 amb llistes de files per a cada columna
+      for (let attempt = 0; attempt < 80; attempt++) {
+        const rowsCount = [0, 0, 0];
+        const layout = Array.from({ length: 9 }, () => []);
+        let ok = true;
+        const colsOrder = [...Array(9).keys()].sort((a, b) => colCounts[b] - colCounts[a]);
+        for (const c of colsOrder) {
+          const need = colCounts[c];
+          const chosen = pickRowsExact(need, rowsCount);
+          if (!chosen) { ok = false; break; }
+          chosen.forEach(r => {
+            layout[c].push(r);
+            rowsCount[r] += 1;
+          });
+        }
+        if (ok && rowsCount.every(r => r === 5)) return layout;
+      }
+      // fallback: greedy exact fit
+      const rowsCount = [0, 0, 0];
+      const layout = Array.from({ length: 9 }, () => []);
+      const colsOrder = [...Array(9).keys()].sort((a, b) => colCounts[b] - colCounts[a]);
+      for (const c of colsOrder) {
+        const need = colCounts[c];
+        const candidates = [0,1,2].filter(r => rowsCount[r] < 5)
+          .sort((a, b) => rowsCount[a] - rowsCount[b]);
+        for (let i = 0; i < need; i++) {
+          const r = candidates[i % candidates.length];
+          layout[c].push(r);
+          rowsCount[r] += 1;
+        }
+      }
+      return layout;
+    }
+
+    function pickRowsExact(need, rowsCount) {
+      const options = [0,1,2].filter(r => rowsCount[r] < 5);
+      if (options.length < need) return null;
+      const sorted = options.sort((a, b) => rowsCount[a] - rowsCount[b] || Math.random() - 0.5);
+      return sorted.slice(0, need);
+    }
+
+    function range(min, max) {
+      const out = [];
+      for (let i = min; i <= max; i++) out.push(i);
+      return out;
+    }
+
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+

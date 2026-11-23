@@ -1,0 +1,70 @@
+﻿<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--Títol-->
+  <title>Quina de Nadal</title>
+  <link rel="icon" type="image/png" href="img/icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- App principal: sorteig i accés a generador de cartrons -->
+  <main class="app">
+    <header class="hero card">
+      <div class="brand">
+        <img class="brand-logo" src="img/logo horitzontal_INS_PLA.png" alt="Logotip Institut Pla de l'Estany">
+        <!--<div class="title">Quina de Nadal</div>-->
+      </div>
+      <div class="stats">
+        <span class="pill" id="remaining">Restants: 90</span>
+        <span class="pill" id="drawn-count">Trets: 0</span>
+        <button class="pill-btn" id="theme-toggle" aria-pressed="false" type="button">
+          <span class="icon sun" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="presentation">
+              <circle cx="12" cy="12" r="4"></circle>
+              <g>
+                <line x1="12" y1="2" x2="12" y2="5"></line>
+                <line x1="12" y1="19" x2="12" y2="22"></line>
+                <line x1="4.22" y1="4.22" x2="6.34" y2="6.34"></line>
+                <line x1="17.66" y1="17.66" x2="19.78" y2="19.78"></line>
+                <line x1="2" y1="12" x2="5" y2="12"></line>
+                <line x1="19" y1="12" x2="22" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="6.34" y2="17.66"></line>
+                <line x1="17.66" y1="6.34" x2="19.78" y2="4.22"></line>
+              </g>
+            </svg>
+          </span>
+          <span class="icon moon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="presentation">
+              <path d="M21 14.5a9 9 0 0 1-11.5-11A9 9 0 1 0 21 14.5z"></path>
+            </svg>
+          </span>
+          <span class="sr-only">Canvia tema</span>
+        </button>
+      </div>
+    </header>
+
+    <section class="content-grid">
+      <section class="display card">
+        <div class="big-number" id="current-number">--</div>
+        <div class="controls">
+          <button class="primary" id="draw-btn">Treure numero</button>
+        </div>
+        <p class="note">Prem espai o el boto per treure un numero.</p>
+        <div class="reset-row">
+          <button class="ghost reset-btn" id="reset-btn">Nova partida</button>
+          <a class="ghost link-btn" href="cartons.html">Genera cartrons</a>
+        </div>
+      </section>
+
+      <section class="grid-section card">
+        <div class="grid-header">
+        </div>
+        <div class="grid" id="board"></div>
+      </section>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
